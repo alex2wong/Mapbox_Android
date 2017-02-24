@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Mapbox_Flight</string>
+    <string name="access_token">pk.eyJ1IjoiaHVhbmd5aXhpdSIsImEiOiJjaXo4YzJ3bHUwMDBhMndvZmkzYjkxOXV5In0.9BuLaRfeIXsBIaWRfu2UvQ</string>
+    <string name="cache_json">JPN.geo.json</string>
+    <string name="global_poly">countries-110m.geojson</string>
+    <string name="JPN_line">JPN_line.json</string>
+    <string name="major_cities">major_cities.json</string>
+    <string name="roads_seoul">roads-seoul.geojson</string>
+</resources>
