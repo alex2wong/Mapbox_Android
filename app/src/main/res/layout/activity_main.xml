@@ -22,27 +22,39 @@
         android:layout_height="match_parent"
 
         android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true" />
+        android:layout_alignParentTop="true" >
+
+
+    </com.mapbox.mapboxsdk.maps.MapView>
 
     <Button
-        android:layout_width="64dp"
-        android:layout_height="32dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:id="@+id/Layers"
-        android:textSize="9dp"
+        android:textSize="12dp"
         android:text="Layers"
-        android:layout_marginTop="2dp"
-        android:layout_marginLeft="65dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="120dp"
         />
     <Button
-        android:layout_width="64dp"
-        android:layout_height="32dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:id="@+id/Addjson"
-        android:textSize="9dp"
+        android:textSize="12dp"
         android:text="GeoJson"
-        android:layout_marginTop="2dp"
-        android:layout_marginLeft="125dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="200dp"
         />
 
+    <android.support.design.widget.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:clickable="true"
+        mapbox:fabSize="mini"
+        android:background="@color/colorAccent"
+        android:id="@+id/floatingActionButton" />
 
     <TextView
         android:id="@+id/content"

@@ -1,9 +1,15 @@
 package com.mb.mapbox_flight;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.content.Intent;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.PopupMenu;
@@ -18,6 +24,8 @@ import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.constants.Style;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.location.LocationListener;
+import com.mapbox.mapboxsdk.location.LocationServices;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.MapboxMapOptions;
@@ -47,6 +55,10 @@ public class MainActivity extends AppCompatActivity {
     private MapView mapView;
     private List<Position> routeCoordinates;
     private MapboxMap map;
+    private LocationServices locationServices;
+    private FloatingActionButton fButton;
+
+    private static final int PERMISSIONS_LOCATION = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +69,8 @@ public class MainActivity extends AppCompatActivity {
 
         // MapView found or created by new MapView.
         mapView = (MapView) findViewById(R.id.mapview);
+
+        locationServices = LocationServices.getLocationServices(MainActivity.this);
 
 //        MapboxMapOptions opts = new MapboxMapOptions()
 //                .styleUrl(Style.OUTDOORS)
@@ -79,6 +93,11 @@ public class MainActivity extends AppCompatActivity {
                         .position(new LatLng(30.800, 120.911))
                         .title("这里是华东")
                         .snippet("欢迎来到这里"));
+
+                mapboxMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(13.371, 103.85))
+                        .title("Combodia")
+                        .snippet("欢迎来到这里 Siem Reap."));
 
                 drawPolygon(mapboxMap);
                 map = mapboxMap;
@@ -110,7 +129,26 @@ public class MainActivity extends AppCompatActivity {
                 mapboxMap.setOnMapClickListener(new MapboxMap.OnMapClickListener() {
                     @Override
                     public void onMapClick(@NonNull LatLng point) {
-                        fly2Point(mapboxMap, new LatLng(31.061, 121.30));
+                        // fly2Point(mapboxMap, new LatLng(13.361, 121.30));
+                    }
+                });
+
+                mapboxMap.setOnMapLongClickListener(new MapboxMap.OnMapLongClickListener() {
+                    @Override
+                    public void onMapLongClick(@NonNull LatLng point) {
+                        fly2Point(mapboxMap, new LatLng(13.371, 103.85), 10);
+                    }
+                });
+
+                fButton = (FloatingActionButton)findViewById(R.id.floatingActionButton);
+                fButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+//                        Intent intent = new Intent(MainActivity.this, Popup.class);
+//                        MainActivity.this.startActivity(intent);
+                        if (map != null) {
+                            toggleGps(!map.isMyLocationEnabled());
+                        }
                     }
                 });
 
@@ -153,10 +191,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // LatLng is basic Point Geometry of Mapbox
-    private void fly2Point(MapboxMap map, LatLng point) {
+    private void fly2Point(MapboxMap map, LatLng point, int zoom) {
         CameraPosition position = new CameraPosition.Builder()
                 .target(point)
-                .zoom(8)
+                .zoom(zoom)
                 .bearing(45)
                 .tilt(30)
                 .build(); // Creates a CameraPosition from the builder
@@ -206,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
         public void onClick(View v) {
             String content = addGeoJSON(getString(R.string.cache_json));
             String2Polygons(content, map, "Japan");
-            fly2Point(map, new LatLng(34.00, 134.22));
+            fly2Point(map, new LatLng(34.00, 134.22), 8);
             System.out.println(content);
         }
     };
@@ -288,6 +326,61 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
+    }
+
+    private void toggleGps(boolean enableGps) {
+        if (enableGps) {
+            // Check if user has granted location permission
+            if (!locationServices.areLocationPermissionsGranted()) {
+//                ActivityCompat.requestPermissions(this, new String[]{
+//                        Manifest.permission.ACCESS_COARSE_LOCATION,
+//                        Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_LOCATION);
+//                Toast.makeText(this, "location not permitted..", Toast.LENGTH_SHORT).show();
+            } else {
+                enableLocation(true);
+            }
+        } else {
+            enableLocation(false);
+        }
+    }
+
+    private void enableLocation(boolean enabled) {
+        if (enabled) {
+            // If we have the last location of the user, we can move the camera to that position.
+            Location lastLocation = locationServices.getLastLocation();
+            if (lastLocation != null) {
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation), 16));
+            }
+
+            locationServices.addLocationListener(new LocationListener() {
+                @Override
+                public void onLocationChanged(Location location) {
+                    if (location != null) {
+                        // Move the map camera to where the user location is and then remove the
+                        // listener so the camera isn't constantly updating when the user location
+                        // changes. When the user disables and then enables the location again, this
+                        // listener is registered again and will adjust the camera once again.
+                        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location), 16));
+                        locationServices.removeLocationListener(this);
+                    }
+                }
+            });
+            fButton.setImageResource(R.drawable.ic_disable_24dp);
+        } else {
+            fButton.setImageResource(R.drawable.ic_my_location_black_24dp);
+        }
+        // Enable or disable the location layer on the map
+        map.setMyLocationEnabled(enabled);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(
+            int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSIONS_LOCATION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                enableLocation(true);
+            }
+        }
     }
 
 }
