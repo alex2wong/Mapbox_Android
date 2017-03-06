@@ -335,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
 //                ActivityCompat.requestPermissions(this, new String[]{
 //                        Manifest.permission.ACCESS_COARSE_LOCATION,
 //                        Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_LOCATION);
-//                Toast.makeText(this, "location not permitted..", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "location not permitted..", Toast.LENGTH_SHORT).show();
             } else {
                 enableLocation(true);
             }
@@ -347,9 +347,16 @@ public class MainActivity extends AppCompatActivity {
     private void enableLocation(boolean enabled) {
         if (enabled) {
             // If we have the last location of the user, we can move the camera to that position.
-            Location lastLocation = locationServices.getLastLocation();
+            final Location lastLocation = locationServices.getLastLocation();
             if (lastLocation != null) {
-                map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation), 16));
+//                double tempLong = lastLocation.getLongitude();
+//                lastLocation.setLongitude(lastLocation.getLatitude());
+//                lastLocation.setLatitude(tempLong);
+
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation), 10));
+
+                Toast.makeText(MainActivity.this, "Lng:" + map.getCameraPosition().target.getLongitude() +
+                        ", Lat:" + map.getCameraPosition().target.getLatitude(), Toast.LENGTH_LONG).show();
             }
 
             locationServices.addLocationListener(new LocationListener() {
@@ -360,7 +367,8 @@ public class MainActivity extends AppCompatActivity {
                         // listener so the camera isn't constantly updating when the user location
                         // changes. When the user disables and then enables the location again, this
                         // listener is registered again and will adjust the camera once again.
-                        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location), 16));
+
+                        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location), 10));
                         locationServices.removeLocationListener(this);
                     }
                 }
